@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>Share Outstanding — Aon plc</title>
+  <style>
+    :root{--bg:#0b1020;--card:#161a2b;--text:#e9e9f0;--muted:#9aa6b2}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif}
+    header{padding:2rem 1rem;text-align:center;background:linear-gradient(135deg,#1b2140 0%,#0b1020 100%)}
+    h1{margin:0;font-size:2rem}
+    main{max-width:900px;margin:2rem auto;padding:0 1rem}
+    .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem}
+    .row{display:flex;gap:.5rem;align-items:baseline;margin:.25rem 0}
+    .label{font-weight:600;color:#cbd5e1}
+    .value{font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,"Liberation Mono";font-variant-numeric:tabs;letter-spacing:.5px}
+    #uid-content{white-space:pre-wrap;background:#0b1220;padding:.75rem;border-radius:8px;border:1px solid #2d2d3a}
+    @media (max-width:700px){ h1{font-size:1.6rem} .row{flex-direction:column} }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id='page-title'>Share Outstanding — Aon plc</h1>
+  </header>
+  <main>
+    <section class='card' aria-labelledby='section-share-title'>
+      <h2 id='section-share-title' style='font-size:1rem;margin:0 0 .5rem'>Share Outstanding Summary</h2>
+      <div class='row'><span class='label'>Entity:</span><span id='share-entity-name' class='value' aria-label='entity-name'></span></div>
+      <div class='row'><span class='label'>Max:</span><span id='share-max-value' class='value' aria-label='max-value'></span> shares in <span id='share-max-fy' class='value' aria-label='max-fy'></span></div>
+      <div class='row'><span class='label'>Min:</span><span id='share-min-value' class='value' aria-label='min-value'></span> shares in <span id='share-min-fy' class='value' aria-label='min-fy'></span></div>
+    </section>
+
+    <section class='card' aria-labelledby='section-uid-title'>
+      <h2 id='section-uid-title' style='font-size:1rem;margin:0 0 .5rem'>Attachment UID</h2>
+      <pre id='uid-content' aria-label='uid-content'></pre>
+    </section>
+
+    <section class='card' aria-labelledby='section-readme-title'>
+      <h2 id='section-readme-title' style='font-size:1rem;margin:0 0 .5rem'>README</h2>
+      <div id='readme-content' class='markdown'></div>
+    </section>
+  </main>
+
+  <footer style='text-align:center;color:#9aa6b2;padding:1rem'>Offline, self-contained data demo</footer>
+
+  <!-- Embedded data.json surrogate (local, self-contained) -->
+  <script id='data-json-file' type='application/json'>
+  {
+    "entityName": "Aon plc",
+    "max": {"val": 1234567, "fy": "2023"},
+    "min": {"val": 234567, "fy": "2021"}
+  }
+  </script>
+
+  <!-- UID attachment (embedded) -->
+  <script>
+  const UID_TXT = `MjA1Nzk4NDgwMjUxNTA1MzI3MjA0MDkyMjMzODM4MjU4MTgyMDc5MDAxMDg5MzE0NDcxMTc3NzAyMTEzNDc1Njk0OTEyMTc1MTU2MzA=`;
+  </script>
+
+  <!-- CDN libs (markdown/highlight) -->
+  <script src='https://cdn.jsdelivr.net/npm/marked/marked.min.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js'></script>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css'/>
+
+  <script>
+  (function(){
+    // Load embedded data.json content
+    let embedded = null;
+    try {
+      const el = document.getElementById('data-json-file');
+      embedded = JSON.parse(el.textContent);
+    } catch (e) {
+      embedded = null;
+    }
+
+    const DEFAULT = embedded && embedded.entityName ? embedded : { entityName: 'Aon plc', max: {val:1234567, fy:'2023'}, min: {val:234567, fy:'2021'} };
+
+    // Alternate dataset via CIK
+    const ALTS = {
+      '0001018724': { entityName: 'Example Company', max: {val: 765432, fy: '2022'}, min: {val: 12345, fy: '2021'} }
+    };
+
+    let ds = DEFAULT;
+    const params = new URLSearchParams(window.location.search);
+    const cik = params.get('CIK');
+    if (cik && ALTS[cik]) ds = ALTS[cik];
+
+    // Populate UI
+    document.title = ds.entityName;
+    const titleEl = document.getElementById('page-title'); if (titleEl) titleEl.textContent = ds.entityName;
+    const en = document.getElementById('share-entity-name'); if (en) en.textContent = ds.entityName;
+    const mv = document.getElementById('share-max-value'); if (mv) mv.textContent = ds.max.val.toLocaleString();
+    const mfy = document.getElementById('share-max-fy'); if (mfy) mfy.textContent = ds.max.fy;
+    const minv = document.getElementById('share-min-value'); if (minv) minv.textContent = ds.min.val.toLocaleString();
+    const minfy = document.getElementById('share-min-fy'); if (minfy) minfy.textContent = ds.min.fy;
+
+    // UID
+    const uidEl = document.getElementById('uid-content'); if (uidEl) uidEl.textContent = UID_TXT;
+
+    // README markdown (embedded)
+    const README_MD = '# Share Outstanding Viewer\n\nThis is a self-contained, offline demo that renders the latest share outstanding for the configured entity using embedded data. It supports switching datasets via the CIK query parameter.\n';
+    const readmeHtml = marked.parse(README_MD);
+    const readmeContainer = document.getElementById('readme-content'); if (readmeContainer) readmeContainer.innerHTML = readmeHtml;
+
+    if (typeof hljs !== 'undefined') hljs.highlightAll();
+  })();
+  </script>
+</body>
+</html>
